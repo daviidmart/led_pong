@@ -10,7 +10,12 @@
 #define NUMPIXELS 51 // Popular NeoPixel ring size
 #define MEDIUMLED 25 // led central
 
-bool end = true;
+#define GREEN pixels.Color(20, 255, 20)
+#define RED pixels.Color(255, 3, 3)
+#define BLUE pixels.Color(20, 20, 255)
+#define ORANGE pixels.Color(255, 40, 0)
+
+int game = 0;
 float speed = 40;
 int actual = 1;
 int last = 0;
@@ -29,17 +34,14 @@ void setup()
   pixels.begin(); // INITIALIZE NeoPixel strip object (REQUIRED)
 }
 
-void restart()
+void reset(int g)
 {
-  pixels.clear();
-  pixels.show();
-  end = false;
+  game = g;
   speed = 40;
   actual = 1;
   last = 0;
   forward = true;
   level = 0;
-  delay(500);
 }
 
 void nextLed()
@@ -79,7 +81,7 @@ void changeSpeed()
   {
     speed -= 0.25;
   }
-  else if (speed <= 1 && speed > 0.1)
+  else if (speed <= 1 && speed >= 0.1)
   {
     speed -= 0.1;
   }
@@ -87,7 +89,7 @@ void changeSpeed()
 
 void endGame(int winner)
 {
-  end = true;
+  game = 0;
   pixels.clear();
   if (winner == 1)
   {
@@ -95,12 +97,12 @@ void endGame(int winner)
     {
       if (i < MEDIUMLED)
       {
-        pixels.setPixelColor(i, pixels.Color(0, 150, 0));
+        pixels.setPixelColor(i, GREEN);
       }
 
       if (i > MEDIUMLED)
       {
-        pixels.setPixelColor(i, pixels.Color(150, 0, 0));
+        pixels.setPixelColor(i, RED);
       }
     }
   }
@@ -111,16 +113,27 @@ void endGame(int winner)
     {
       if (i < MEDIUMLED)
       {
-        pixels.setPixelColor(i, pixels.Color(150, 0, 0));
+        pixels.setPixelColor(i, RED);
       }
 
       if (i > MEDIUMLED)
       {
-        pixels.setPixelColor(i, pixels.Color(0, 150, 0));
+        pixels.setPixelColor(i, GREEN);
       }
     }
   }
 
+  pixels.show();
+  for (int x = 0; x < 20; x++)
+  {
+    pixels.setPixelColor(actual, RED);
+    pixels.show();
+    delay(150);
+    pixels.setPixelColor(actual, pixels.Color(0,0,0));
+    pixels.show();
+    delay(100);
+  }
+  pixels.clear();
   pixels.show();
 }
 
@@ -136,15 +149,6 @@ void statusButtonOne()
   {
     stateOne = LOW;
   }
-
-  if (stateOne == HIGH && !forward)
-  {
-    endGame(1);
-  }
-  else
-  {
-    forward = !forward;
-  }
 }
 
 byte stateTwo = LOW;
@@ -158,15 +162,6 @@ void statusButtonTwo()
   if (digitalRead(B2) == LOW && stateTwo == HIGH)
   {
     stateTwo = LOW;
-  }
-
-  if (stateTwo == HIGH && forward)
-  {
-    endGame(1);
-  }
-  else
-  {
-    forward = !forward;
   }
 }
 
@@ -183,55 +178,112 @@ void unpresed()
   }
 }
 
-void rainbow(int wait)
+void demo()
 {
-  for (long firstPixelHue = 0; firstPixelHue < 5 * 65536; firstPixelHue += 150)
+  if (stateOne == HIGH || stateTwo == HIGH)
   {
-    for (int i = 0; i < pixels.numPixels(); i++)
-    {
-      int pixelHue = firstPixelHue + (i * 65536L / pixels.numPixels());
-      pixels.setPixelColor(i, pixels.gamma32(pixels.ColorHSV(pixelHue)));
-    }
-    pixels.setBrightness(100);
-    pixels.show(); // Update strip with new contents
-    delay(wait);   // Pause for a moment
+    reset(1);
+    pixels.clear();
+    pixels.show();
+    delay(500);
+    return;
   }
+
+  if (actual != MEDIUMLED)
+  {
+    pixels.setPixelColor(last, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(actual, ORANGE);
+    delay(speed);
+  }
+  else
+  {
+    pixels.setPixelColor(last, pixels.Color(0, 0, 0));
+  }
+
+  pixels.setPixelColor(MEDIUMLED, ORANGE);
+  pixels.setPixelColor(0, ORANGE);
+  pixels.setPixelColor(NUMPIXELS - 1, ORANGE);
+  pixels.show();
+
+  nextLed();
+}
+
+void gameOne()
+{
+  if (stateOne == HIGH && forward)
+  {
+    if (actual > 25)
+    {
+      forward = !forward;
+    }
+    else
+    {
+      endGame(1);
+    }
+  }
+
+  if (stateOne == HIGH && !forward)
+  {
+    if (actual < 25)
+    {
+      endGame(1);
+    }
+  }
+
+  if (stateTwo == HIGH && !forward)
+  {
+    if (actual < 25)
+    {
+      forward = !forward;
+    }
+    else
+    {
+      endGame(2);
+    }
+  }
+
+  if (stateTwo == HIGH && forward)
+  {
+    if (actual > 25)
+    {
+      endGame(2);
+    }
+  }
+
+  if (actual != MEDIUMLED)
+  {
+    pixels.setPixelColor(last, pixels.Color(0, 0, 0));
+    pixels.setPixelColor(actual, BLUE);
+    delay(speed);
+  }
+  else
+  {
+    pixels.setPixelColor(last, pixels.Color(0, 0, 0));
+    changeSpeed();
+  }
+
+  pixels.setPixelColor(MEDIUMLED, BLUE);
+  pixels.setPixelColor(0, BLUE);
+  pixels.setPixelColor(NUMPIXELS - 1, BLUE);
+  pixels.show();
+
+  nextLed();
+  unpresed();
 }
 
 void loop()
 {
-  if (end == true)
+  statusButtonOne();
+  statusButtonTwo();
+
+  switch (game)
   {
-    if (digitalRead(B1) == HIGH && end == true)
-    {
-      restart();
-    }
+  case 1:
+    gameOne();
+    break;
 
-    //rainbow(1);
-  }
-  else
-  {
-    statusButtonOne();
-    statusButtonTwo();
-
-    if (actual != MEDIUMLED)
-    {
-      pixels.setPixelColor(last, pixels.Color(0, 0, 0));
-      pixels.setPixelColor(actual, pixels.Color(0, 255, 0));
-      delay(speed);
-    }
-    else
-    {
-      pixels.setPixelColor(last, pixels.Color(0, 0, 0));
-      changeSpeed();
-    }
-
-    pixels.setPixelColor(MEDIUMLED, pixels.Color(255, 0, 0));
-    pixels.setPixelColor(0, pixels.Color(255, 0, 0));
-    pixels.setPixelColor(NUMPIXELS - 1, pixels.Color(255, 0, 0));
-    pixels.show();
-
-    nextLed();
-    unpresed();
+  default:
+    demo();
+    break;
   }
 }
