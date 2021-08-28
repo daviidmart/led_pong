@@ -7,8 +7,8 @@
 #define B2 2
 
 #define PIN 0        // On Trinket or Gemma, suggest changing this to 1
-#define NUMPIXELS 51 // Popular NeoPixel ring size
-#define MEDIUMLED 25 // led central
+#define NUMPIXELS 61 // Popular NeoPixel ring size
+#define MEDIUMLED 30 // led central
 
 #define GREEN pixels.Color(20, 255, 20)
 #define RED pixels.Color(255, 3, 3)
@@ -178,6 +178,8 @@ void unpresed()
   }
 }
 
+long gama = 5*65536;
+long pixelHue = 0;
 void demo()
 {
   if (stateOne == HIGH || stateTwo == HIGH)
@@ -192,7 +194,7 @@ void demo()
   if (actual != MEDIUMLED)
   {
     pixels.setPixelColor(last, pixels.Color(0, 0, 0));
-    pixels.setPixelColor(actual, ORANGE);
+    pixels.setPixelColor(actual, pixels.gamma32(pixels.ColorHSV(pixelHue)));
     delay(speed);
   }
   else
@@ -200,10 +202,16 @@ void demo()
     pixels.setPixelColor(last, pixels.Color(0, 0, 0));
   }
 
-  pixels.setPixelColor(MEDIUMLED, ORANGE);
-  pixels.setPixelColor(0, ORANGE);
-  pixels.setPixelColor(NUMPIXELS - 1, ORANGE);
+  pixels.setPixelColor(MEDIUMLED, pixels.gamma32(pixels.ColorHSV(pixelHue)));
+  pixels.setPixelColor(0, pixels.gamma32(pixels.ColorHSV(pixelHue)));
+  pixels.setPixelColor(NUMPIXELS - 1, pixels.gamma32(pixels.ColorHSV(pixelHue)));
   pixels.show();
+
+  if(pixelHue < gama){
+    pixelHue += 256;
+  }else{
+    pixelHue = 0;
+  }
 
   nextLed();
 }
