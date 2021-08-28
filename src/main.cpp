@@ -89,7 +89,6 @@ void changeSpeed()
 
 void endGame(int winner)
 {
-  game = 0;
   pixels.clear();
   if (winner == 1)
   {
@@ -124,17 +123,18 @@ void endGame(int winner)
   }
 
   pixels.show();
-  for (int x = 0; x < 20; x++)
+  for (int x = 0; x < 35; x++)
   {
     pixels.setPixelColor(actual, RED);
     pixels.show();
-    delay(150);
+    delay(100);
     pixels.setPixelColor(actual, pixels.Color(0,0,0));
     pixels.show();
     delay(100);
   }
   pixels.clear();
   pixels.show();
+  reset(0);
 }
 
 byte stateOne = LOW;
@@ -262,9 +262,9 @@ void gameOne()
     changeSpeed();
   }
 
-  pixels.setPixelColor(MEDIUMLED, BLUE);
-  pixels.setPixelColor(0, BLUE);
-  pixels.setPixelColor(NUMPIXELS - 1, BLUE);
+  pixels.setPixelColor(MEDIUMLED, RED);
+  pixels.setPixelColor(0, RED);
+  pixels.setPixelColor(NUMPIXELS - 1, RED);
   pixels.show();
 
   nextLed();
